@@ -281,7 +281,7 @@ func (s *SchemaValidator) typeValidator() valueValidator {
 		s.path,
 		s.in,
 		s.Schema.Type,
-		s.Schema.Nullable,
+		isNullable(s.Schema.Nullable, s.Schema.Extensions),
 		s.Schema.Format,
 		s.Options,
 	)
