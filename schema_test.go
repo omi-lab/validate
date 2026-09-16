@@ -222,3 +222,28 @@ func TestSchemaValidator_TypeArray_Issue83(t *testing.T) {
 	// swagger behavior
 	require.Error(t, AgainstSchema(schema, input, strfmt.Default, SwaggerSchema(true)))
 }
+
+func TestSchemaValidator_NullableEnum(t *testing.T) {
+	t.Parallel()
+
+	schema := spec.StringProperty().
+		WithEnum("Combined", "Individual")
+	schema.Extensions = spec.Extensions{extensionNullable: true}
+
+	s := NewSchemaValidator(schema, nil, "", strfmt.Default)
+
+	result := s.Validate(nil)
+	assert.TrueT(t, result.IsValid(), "null should satisfy a nullable enum schema")
+
+	result = s.Validate("Combined")
+	assert.TrueT(t, result.IsValid())
+
+	result = s.Validate("Bogus")
+	assert.FalseT(t, result.IsValid(), "a non-null, non-enum value should still fail")
+
+	// same schema, not nullable: null must still be rejected
+	notNullable := spec.StringProperty().WithEnum("Combined", "Individual")
+	s = NewSchemaValidator(notNullable, nil, "", strfmt.Default)
+	result = s.Validate(nil)
+	assert.FalseT(t, result.IsValid())
+}

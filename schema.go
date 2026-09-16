@@ -187,7 +187,12 @@ func (s *SchemaValidator) Validate(data any) *Result {
 	if data == nil {
 		// early exit with minimal validation
 		result.Merge(s.validators[0].Validate(data)) // type validator
-		result.Merge(s.validators[6].Validate(data)) // common validator
+
+		// enum/default never matches null, so skip it for nullable schemas or it
+		// would reject a legitimate null value.
+		if s.Schema == nil || !isNullable(s.Schema.Nullable, s.Schema.Extensions) {
+			result.Merge(s.validators[6].Validate(data)) // common validator
+		}
 
 		if s.Options.recycleValidators {
 			s.validators[0] = nil
